@@ -1,14 +1,96 @@
-![CommitLog: Fetch & flush semantics](./banner.png) 
+![Ledger: Fetch & flush semantics](./banner.png) 
 
-[![License](http://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://github.com/sotownsend/commitlog/blob/master/LICENSE)
-[![Build Status](https://circleci.com/gh/sotownsend/commitlog.png?circle-token=:circle-token)](https://circleci.com/gh/sotownsend/commitlog)
+[![License](http://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://github.com/sotownsend/ledger/blob/master/LICENSE)
+[![Build Status](https://circleci.com/gh/sotownsend/ledger.png?circle-token=:circle-token)](https://circleci.com/gh/sotownsend/ledger)
 
 # What is this?
 
-A package that provides generics for creating your own commit log. 
-A *commit log* is a generic data-structure that holds an ordered & prioritized list of `Commit` objects. How information is stored in a
-commit log is user defined.
+A package that provides generics for creating your own ledger. 
+A *ledger* is a generic data-structure that holds an ordered & prioritized list of `Commit` objects. How information is stored in a
+ledger is user defined.
 
+# Usage
+
+
+```go
+
+// Filled out yay
+type LedgerEntry struct {
+}
+
+masterLedger := NewLedger(LedgerOps{
+  ExecQuery: func (query *LedgerQuery) []LedgerEntry {
+  },
+})
+
+masterLedger.RegisterObjectLookup("premium_purchase", func (objectId int) interface{} {
+  return NewPremiumPurchase(objectId)
+}
+
+// Register an apply function for user
+masterLedger.AddApply("apply_premiums_to_user", func (obj interface{}, entry *LedgerEntry) {
+  // We're applying changes to user
+  u := obj.(User)
+  
+  if entry.Type == "premium_purchase" {
+    pp := entry.GetObject().(PremiumPurchase)
+    
+    features := pp.GetPremiumFeatureSet().GetFeatures()
+    
+    u.PremiumFeatures = append(u.Premiumfeatures, features)
+  }
+}
+
+func (l *Ledger) Apply(name string, []ledgerQueries queries, obj interface{}) {
+  res := []LedgerEntries{}
+  for q := range queries {
+    e := q.Exec()
+    res = append(res, e)
+  }
+  
+  
+  applyF := ledger.LookupApplyFunction(name)
+}
+
+type struct LedgerQuery {
+  userInfo interface{}
+  
+  type string
+  showExpired bool
+  
+  startDateRange time.Time
+  endDateRange time.Time
+}
+
+func (l *Ledger) Query() (*LedgerQuery) {
+  return &LedgerQuery{
+    showExpired: true
+  }
+}
+
+func (l *LedgerQuery) HideExpired() *LedgerQuery {
+  l.showExpired = false
+  
+  return l
+}
+
+func (l *Ledger) WithType(type string) (*LedgerQuery) {
+  return LedgerQuery{
+    type: type
+  }
+}
+
+func (l *Ledger) LookupObject(type string, id int) {
+  f, ok := l.RegisteredObjects[type]
+  if !ok { panic("Ledger: The object type '%s' was not registered, please register this type with RegisterObjectLookup") }
+  
+  return f(id)
+}
+
+func (le *LedgerEntry) GetObject() interface{} {
+  le.Ledger.registeredObjectTypes[le.Type]
+}
+```
 
 ### Example Use Cases
 
@@ -21,19 +103,20 @@ You have an app that relies on subscriptions for a subset to enable a subset of 
 ## Example
 
 ### Step 1
-Let's start with a user object.  We embed the `lz CommitLog` structure into our `User` model:
+Let's start by creating a new ledger.  We'll be storing all of our commits in this log location.
 
 ```go
-type User struct {
-  // SQL Zone
-  Name string
-  Age int
-  
-  // Some other data-store (e.g. Redis)
-  PeopleViewingMe []People
+import (
+  "github.com/sotownsend/ledger"
 
-  lz commitlog.CommitLog
-}
+  var commitLog Ledger
+  func main() {
+    // Set-up our ledger
+    commitLog = ledger.NewLedger("commits", CommitOps{
+    })
+
+    // Configure this ledgers operations
+)
 ```
 
 ### Step 2
@@ -134,4 +217,4 @@ Todo
 
 ## License
 
-commitlog is released under the MIT license. See LICENSE for details.
+ledger is released under the MIT license. See LICENSE for details.

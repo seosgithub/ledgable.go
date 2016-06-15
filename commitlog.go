@@ -1,8 +1,6 @@
 package models
 
-import (
-	"github.com/Masterminds/squirrel"
-)
+import "github.com/Masterminds/squirrel"
 
 // A ledger manages a sequence of events
 type Ledger struct {
