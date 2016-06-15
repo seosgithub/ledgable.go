@@ -1,7 +1,7 @@
 ![Ledger: Fetch & flush semantics](./banner.png) 
 
-[![License](http://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://github.com/sotownsend/ledger/blob/master/LICENSE)
-[![Build Status](https://circleci.com/gh/sotownsend/ledger.png?circle-token=:circle-token)](https://circleci.com/gh/sotownsend/ledger)
+[![License](http://img.shields.io/badge/license-MIT-green.svg?style=flat)](https://github.com/sotownsend/ledgable/blob/master/LICENSE)
+[![Build Status](https://circleci.com/gh/sotownsend/ledgable.png?circle-token=:circle-token)](https://circleci.com/gh/sotownsend/ledgable)
 
 # What is this?
 
