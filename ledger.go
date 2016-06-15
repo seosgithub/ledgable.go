@@ -1,47 +1,52 @@
-package models
+package ledgable
 
-import "github.com/Masterminds/squirrel"
-
-// A ledger manages a sequence of events
+type LedgerQueryRunner func(filter *LedgerQuery) []*LedgerCommit
 type Ledger struct {
-	Name string // Should match SQL table name
+	applyFuncs map[string]LedgerApplyFunc
+
+	queryRunner LedgerQueryRunner
 }
 
-func NewLedger(name string) Ledger {
-	SqlMapped.AddTableWithName(LedgerEntry{}, name)
-	return Ledger{Name: name}
+// Create a new ledger
+func NewLedger(queryRunner LedgerQueryRunner) *Ledger {
+	return &Ledger{
+		applyFuncs:  map[string]LedgerApplyFunc{},
+		queryRunner: queryRunner,
+	}
 }
 
-type LedgerEntry struct {
-	/* Managed by Gorp */
-	M_Id        int64  `db:"id"`
-	M_Type      string `db:"type"`
-	M_ObjectId  int64  `db:"object_id"`
-	M_Filter    int64  `db:"filter"`
-	M_ExpTime   int64  `db:"exp_time"`
-	M_CreatedAt int64  `db:"created_at"`
+type LedgerQuery struct {
+	ledger *Ledger
 }
 
-/* Call this function first to get a generic query */
-func (l *Ledger) Query() LedgerQuery {
-	return LedgerQuery{Sql: Sql.Select("*").From(l.Name)}
+func (l *Ledger) Query() *LedgerQuery {
+	return &LedgerQuery{
+		ledger: l,
+	}
 }
 
-/* Filter for only certain types of entries in the ledger */
-func (lq LedgerQuery) FilterTypes(types ...string) LedgerQuery {
-	lq.Sql = lq.Sql.Where(squirrel.Eq{"type": types})
+type LedgerCommit struct {
+	Id   int
+	Type string
+}
 
+type LedgerApplyFunc func(res interface{}, commit *LedgerCommit)
+
+func (l *Ledger) RegisterApply(name string, applyFunc LedgerApplyFunc) {
+	l.applyFuncs[name] = applyFunc
+}
+
+func (lq *LedgerQuery) WithType(_type string) *LedgerQuery {
 	return lq
 }
 
-func (lq LedgerQuery) Exec() ([]LedgerEntry, error) {
+func (lq *LedgerQuery) Apply(name string, obj interface{}) {
+	// Retrieve all entries from this query
 
-	//sqlQuery, args, err := lq.Sql.ToSql()
-	//if err != nil {
-	//return nil, err
-	//}
+	entries := lq.ledger.queryRunner(lq)
 
-	entries := []LedgerEntry{}
-	_, err = SqlMapped.Select(&entries, lq.Sql)
-	return entries, err
+	applyFunc := lq.ledger.applyFuncs[name]
+	for _, entry := range entries {
+		applyFunc(obj, entry)
+	}
 }

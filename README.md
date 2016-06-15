@@ -5,8 +5,32 @@
 
 # What is this?
 
-A package that provides generics for creating your own ledger. 
-A *ledger* is a generic data-structure that holds an ordered & prioritized list of `Commit` objects. How information is stored in a
+This package provides the generics needed for a *ledger* data structure.  A *ledger* is a fancy word for a table of data where each entry has at minimum 
+
+A *ledger* is a way to relate several different kinds of objects in something like <temporal, geographical, priority>, owner_id>.  Then you can search over all those objects in a generic fashion.  
+
+-------------------
+id
+
+object_id
+
+priority
+
+-------------------
+
+Commit Entry (Represents an event, the actually information of the event is based on <`type, object_id`>): `<uuid, type, object_id, priority, created_at, _extra...>`
+
+The expression above reads "An identifiable object".  So if you went with only that, your ledger would only contains a giant sack of objects with no geo or temporal encoding.
+
+So depending on how you need to query, for example, timeslice?
+
+
+> When we say **generics**
+
+#### What is a *ledger* data structure?
+
+A *ledger* contains
+
 ledger is user defined.
 
 # Usage
